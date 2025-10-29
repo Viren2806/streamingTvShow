@@ -32,7 +32,6 @@ function EntryForm({ initial = {}, onSave, onCancel }) {
     location: "",
     duration: "",
     year: "",
-    notes: "",
     ...initial,
   });
 
@@ -95,16 +94,10 @@ function EntryForm({ initial = {}, onSave, onCancel }) {
         style={inputStyle}
       />
       <input
-        placeholder="📅 Year / Time"
+        placeholder="📅 Year"
         value={form.year}
         onChange={(e) => update("year", e.target.value)}
         style={inputStyle}
-      />
-      <textarea
-        placeholder="📝 Notes"
-        value={form.notes}
-        onChange={(e) => update("notes", e.target.value)}
-        style={{ ...inputStyle, minHeight: "80px" }}
       />
       <div style={{ display: "flex", gap: "10px" }}>
         <button

@@ -146,52 +146,56 @@ function Task() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-
   const [page, setPage] = useState(1);
-const [total, setTotal] = useState(0);
-const limit = 10; // how many per page
+  const [total, setTotal] = useState(0);
+  const limit = 10; // how many per page
 
-  const api='https://streamingtvshow.onrender.com/'; 
-  // ✅ Fetch all movies
+  const api = "https://streamingtvshow.onrender.com/";
+
+  // ✅ Fetch movies
   const fetchOTTData = async (pageNumber = 1) => {
-  try {
-    setLoading(true);
-    const response = await fetch(`${api}getallmovies?page=${pageNumber}&limit=${limit}`);
-    const json = await response.json();
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${api}getallmovies?page=${pageNumber}&limit=${limit}`
+      );
+      const json = await response.json();
 
-    if (response.ok) {
-      setEntries(json.data || []);
-      setTotal(json.total || 0);
-      setPage(json.page);
-    } else {
-      console.error("API Error:", json.error || json.message);
+      if (response.ok) {
+        setEntries(json.data || []);
+        setTotal(json.total || 0);
+        setPage(json.page || pageNumber);
+      } else {
+        console.error("API Error:", json.error || json.message);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Network error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-  // 🔹 Load data initially
+  // Load on mount
   useEffect(() => {
-    fetchOTTData();
-  }, []);
+    fetchOTTData(page);
+  }, [page]);
 
-  // 🔹 Live Search with debounce
+  // 🔍 Search with debounce
   useEffect(() => {
     const delayDebounce = setTimeout(async () => {
       if (search.trim() === "") {
-        fetchOTTData();
+        fetchOTTData(page);
         return;
       }
 
       try {
-       const res = await fetch(`${api}searchmovies?q=${encodeURIComponent(search)}&page=${page}&limit=${limit}`);
-
+        const res = await fetch(
+          `${api}searchmovies?q=${encodeURIComponent(search)}&page=${page}&limit=${limit}`
+        );
         const json = await res.json();
         if (res.ok) {
           setEntries(json.data || []);
+          setTotal(json.total || 0);
         } else {
           console.error("Search error:", json.error || json.message);
         }
@@ -201,12 +205,12 @@ const limit = 10; // how many per page
     }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [search]);
+  }, [search, page]);
 
   // 🔹 Create Entry
   const handleCreate = async (data) => {
     try {
-      const res = await fetch( api+"savemovies", {
+      const res = await fetch(api + "savemovies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -229,7 +233,7 @@ const limit = 10; // how many per page
   // 🔹 Update Entry
   const handleUpdate = async (id, data) => {
     try {
-      const res = await fetch(api+`updatemovie/${id}`, {
+      const res = await fetch(api + `updatemovie/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -255,7 +259,7 @@ const limit = 10; // how many per page
     if (!window.confirm("Are you sure you want to delete this entry?")) return;
 
     try {
-      const res = await fetch(api+`deletemovie/${id}`, {
+      const res = await fetch(api + `deletemovie/${id}`, {
         method: "DELETE",
       });
       const json = await res.json();
@@ -270,6 +274,8 @@ const limit = 10; // how many per page
       alert("⚠️ Network error while deleting data.");
     }
   };
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <motion.div
@@ -297,7 +303,7 @@ const limit = 10; // how many per page
           cursor: "pointer",
         }}
       >
-        {showForm ? "Hide Form" : "➕ Add New Movies"}
+        {showForm ? "Hide Form" : "➕ Add New Movie"}
       </button>
 
       {/* 🔍 Search Box */}
@@ -346,14 +352,8 @@ const limit = 10; // how many per page
             </thead>
             <tbody>
               {entries.map((movie) => (
-                <motion.tr
-                  key={movie.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <td style={{ ...tableCellStyle, fontWeight: "bold" }}>
-                    {movie.title}
-                  </td>
+                <motion.tr key={movie.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <td style={{ ...tableCellStyle, fontWeight: "bold" }}>{movie.title}</td>
                   <td style={tableCellStyle}>{movie.director || "N/A"}</td>
                   <td style={tableCellStyle}>{movie.budget || "N/A"}</td>
                   <td style={tableCellStyle}>{movie.location || "N/A"}</td>
@@ -391,41 +391,49 @@ const limit = 10; // how many per page
           </table>
         </div>
       )}
-      {/* 🔹 Pagination Controls */}
-  <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
-    <button
-      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-      disabled={currentPage === 1}
-      style={{
-        padding: "8px 16px",
-        background: currentPage === 1 ? "#ccc" : "#007bff",
-        color: "#fff",
-        border: "none",
-        borderRadius: "6px",
-        cursor: currentPage === 1 ? "not-allowed" : "pointer",
-      }}
-    >
-      ◀ Prev
-    </button>
-    <span style={{ fontWeight: "bold", alignSelf: "center" }}>
-      Page {currentPage} of {totalPages}
-    </span>
-    <button
-      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-      disabled={currentPage === totalPages}
-      style={{
-        padding: "8px 16px",
-        background: currentPage === totalPages ? "#ccc" : "#007bff",
-        color: "#fff",
-        border: "none",
-        borderRadius: "6px",
-        cursor: currentPage === totalPages ? "not-allowed" : "pointer",
-      }}
-    >
-      Next ▶
-    </button>
-  </div>
 
+      {/* 🔹 Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px", alignItems: "center" }}>
+          <button
+            onClick={() => {
+              if (page > 1) setPage(page - 1);
+            }}
+            disabled={page === 1}
+            style={{
+              padding: "8px 16px",
+              background: page === 1 ? "#ccc" : "#007bff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              cursor: page === 1 ? "not-allowed" : "pointer",
+            }}
+          >
+            ◀ Prev
+          </button>
+
+          <span style={{ fontWeight: "bold" }}>
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => {
+              if (page < totalPages) setPage(page + 1);
+            }}
+            disabled={page === totalPages}
+            style={{
+              padding: "8px 16px",
+              background: page === totalPages ? "#ccc" : "#007bff",
+              color: "#fff",
+              border: "none",
+              borderRadius: "6px",
+              cursor: page === totalPages ? "not-allowed" : "pointer",
+            }}
+          >
+            Next ▶
+          </button>
+        </div>
+      )}
 
       {/* ✏️ Edit Modal */}
       <AnimatePresence>

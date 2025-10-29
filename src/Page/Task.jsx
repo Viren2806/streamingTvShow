@@ -151,6 +151,9 @@ function Task() {
   const limit = 10; // how many per page
 
   const api = "https://streamingtvshow.onrender.com/";
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
 
   // ✅ Fetch movies
   const fetchOTTData = async (pageNumber = 1) => {

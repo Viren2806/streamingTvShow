@@ -1,11 +1,14 @@
 # 🎬 OTT Streaming App
 Full-stack web app for managing OTT movies.
 Frontend: React (https://streamingtvshow.onrender.com)
-Backend API: Node + PostgreSQL 
+Backend API: Node + EXpressjs
+Database:Postgres
 Features: Add, edit, delete, search, and pagination.
 
-END POINTS:
 
+
+
+END POINTS:
 
 1.https://streamingtvshow.onrender.com/getallmovies?page=2&limit=10
 

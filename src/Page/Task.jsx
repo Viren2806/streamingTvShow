@@ -146,12 +146,12 @@ function Task() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-  const api='https://streamingtvshow.onrender.com'; 
+  const api='https://streamingtvshow.onrender.com/'; 
   // ✅ Fetch all movies
   const fetchOTTData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(api+"/getallmovies");
+      const response = await fetch(api+"getallmovies");
       const json = await response.json();
 
       if (response.ok) {
@@ -249,7 +249,7 @@ function Task() {
     if (!window.confirm("Are you sure you want to delete this entry?")) return;
 
     try {
-      const res = await fetch(api+`/deletemovie/${id}`, {
+      const res = await fetch(api+`deletemovie/${id}`, {
         method: "DELETE",
       });
       const json = await res.json();

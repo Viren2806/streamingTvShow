@@ -56,42 +56,67 @@ app.post('/savemovies', async (req, res) => {
     res.status(500).json({ error: 'Failed to save data', details: error.message });
   }
 });
-
-// --- GET: Search Movies ---
-app.get('/searchmovies', async (req, res) => {
-  const { q } = req.query;
-
-  if (!q || q.trim() === '') {
-    return res.status(400).json({ error: 'Search query is required.' });
-  }
-
-  const queryText = `
-    SELECT * FROM ott
-    WHERE LOWER(title) LIKE LOWER($1)
-       OR LOWER(director) LIKE LOWER($1)
-       OR CAST(year AS TEXT) LIKE $1
-    ORDER BY id ASC;
-  `;
+// --- GET: All Movies with Pagination ---
+app.get("/getallmovies", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // default page=1, limit=10
+  const offset = (page - 1) * limit;
 
   try {
-    const result = await pool.query(queryText, [`%${q}%`]);
-    if (result.rowCount === 0) return res.status(404).json({ message: 'No movies found.' });
+    const total = await pool.query("SELECT COUNT(*) FROM ott;");
+    const result = await pool.query(
+      "SELECT * FROM ott ORDER BY id ASC LIMIT $1 OFFSET $2;",
+      [limit, offset]
+    );
 
-    res.status(200).json({ message: '✅ Movies found!', data: result.rows });
+    res.status(200).json({
+      message: "✅ All records fetched!",
+      total: parseInt(total.rows[0].count),
+      page: Number(page),
+      limit: Number(limit),
+      data: result.rows,
+    });
   } catch (error) {
-    console.error('❌ Database SEARCH error:', error);
-    res.status(500).json({ error: 'Failed to search movies.', details: error.message });
+    console.error("Database SELECT error:", error);
+    res.status(500).json({
+      error: "Failed to fetch data",
+      details: error.message,
+    });
   }
 });
 
-// --- GET: All Movies ---
-app.get('/getallmovies', async (req, res) => {
+// --- GET: Search Movies with Pagination ---
+app.get("/searchmovies", async (req, res) => {
+  const { q, page = 1, limit = 10 } = req.query;
+  const offset = (page - 1) * limit;
+
+  if (!q || q.trim() === "") {
+    return res.status(400).json({ error: "Search query is required." });
+  }
+
   try {
-    const result = await pool.query('SELECT * FROM ott ORDER BY id ASC;');
-    res.status(200).json({ message: '✅ All records fetched!', data: result.rows });
+    const total = await pool.query(
+      "SELECT COUNT(*) FROM ott WHERE LOWER(title) LIKE LOWER($1);",
+      [`%${q}%`]
+    );
+
+    const result = await pool.query(
+      "SELECT * FROM ott WHERE LOWER(title) LIKE LOWER($1) ORDER BY id ASC LIMIT $2 OFFSET $3;",
+      [`%${q}%`, limit, offset]
+    );
+
+    res.status(200).json({
+      message: "✅ Movies found!",
+      total: parseInt(total.rows[0].count),
+      page: Number(page),
+      limit: Number(limit),
+      data: result.rows,
+    });
   } catch (error) {
-    console.error('❌ Database SELECT error:', error);
-    res.status(500).json({ error: 'Failed to fetch data', details: error.message });
+    console.error(" Database SEARCH error:", error);
+    res.status(500).json({
+      error: "Failed to search movies.",
+      details: error.message,
+    });
   }
 });
 
@@ -111,7 +136,7 @@ app.put('/updatemovie/:id', async (req, res) => {
     if (result.rowCount === 0) return res.status(404).json({ error: 'No record found with this ID.' });
     res.status(200).json({ message: '✅ Updated successfully!', data: result.rows[0] });
   } catch (error) {
-    console.error('❌ Database UPDATE error:', error);
+    console.error(' Database UPDATE error:', error);
     res.status(500).json({ error: 'Failed to update data', details: error.message });
   }
 });

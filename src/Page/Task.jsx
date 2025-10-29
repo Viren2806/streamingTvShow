@@ -146,25 +146,32 @@ function Task() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
+
+  const [page, setPage] = useState(1);
+const [total, setTotal] = useState(0);
+const limit = 10; // how many per page
+
   const api='https://streamingtvshow.onrender.com/'; 
   // ✅ Fetch all movies
-  const fetchOTTData = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(api+"getallmovies");
-      const json = await response.json();
+  const fetchOTTData = async (pageNumber = 1) => {
+  try {
+    setLoading(true);
+    const response = await fetch(`${api}getallmovies?page=${pageNumber}&limit=${limit}`);
+    const json = await response.json();
 
-      if (response.ok) {
-        setEntries(json.data || []);
-      } else {
-        console.error("API Error:", json.error || json.message);
-      }
-    } catch (error) {
-      console.error("Network error:", error);
-    } finally {
-      setLoading(false);
+    if (response.ok) {
+      setEntries(json.data || []);
+      setTotal(json.total || 0);
+      setPage(json.page);
+    } else {
+      console.error("API Error:", json.error || json.message);
     }
-  };
+  } catch (error) {
+    console.error("Network error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // 🔹 Load data initially
   useEffect(() => {
@@ -180,9 +187,8 @@ function Task() {
       }
 
       try {
-        const res = await fetch(
-         api+`searchmovies?q=${encodeURIComponent(search)}`
-        );
+       const res = await fetch(`${api}searchmovies?q=${encodeURIComponent(search)}&page=${page}&limit=${limit}`);
+
         const json = await res.json();
         if (res.ok) {
           setEntries(json.data || []);
@@ -385,6 +391,41 @@ function Task() {
           </table>
         </div>
       )}
+      {/* 🔹 Pagination Controls */}
+  <div style={{ display: "flex", justifyContent: "center", marginTop: "20px", gap: "10px" }}>
+    <button
+      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+      disabled={currentPage === 1}
+      style={{
+        padding: "8px 16px",
+        background: currentPage === 1 ? "#ccc" : "#007bff",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        cursor: currentPage === 1 ? "not-allowed" : "pointer",
+      }}
+    >
+      ◀ Prev
+    </button>
+    <span style={{ fontWeight: "bold", alignSelf: "center" }}>
+      Page {currentPage} of {totalPages}
+    </span>
+    <button
+      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+      disabled={currentPage === totalPages}
+      style={{
+        padding: "8px 16px",
+        background: currentPage === totalPages ? "#ccc" : "#007bff",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+      }}
+    >
+      Next ▶
+    </button>
+  </div>
+
 
       {/* ✏️ Edit Modal */}
       <AnimatePresence>

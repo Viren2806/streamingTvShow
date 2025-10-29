@@ -146,12 +146,12 @@ function Task() {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
-
+  const api='https://streamingtvshow.onrender.com'; 
   // ✅ Fetch all movies
   const fetchOTTData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://streamingtvshow-api.onrender.com/getallmovies");
+      const response = await fetch(api+"/getallmovies");
       const json = await response.json();
 
       if (response.ok) {
@@ -181,7 +181,7 @@ function Task() {
 
       try {
         const res = await fetch(
-          `https://streamingtvshow-api.onrender.com/searchmovies?q=${encodeURIComponent(search)}`
+         api+`searchmovies?q=${encodeURIComponent(search)}`
         );
         const json = await res.json();
         if (res.ok) {
@@ -200,7 +200,7 @@ function Task() {
   // 🔹 Create Entry
   const handleCreate = async (data) => {
     try {
-      const res = await fetch("https://streamingtvshow-api.onrender.com/savemovies", {
+      const res = await fetch( api+"savemovies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -223,7 +223,7 @@ function Task() {
   // 🔹 Update Entry
   const handleUpdate = async (id, data) => {
     try {
-      const res = await fetch(`https://streamingtvshow-api.onrender.com/updatemovie/${id}`, {
+      const res = await fetch(api+`updatemovie/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -249,7 +249,7 @@ function Task() {
     if (!window.confirm("Are you sure you want to delete this entry?")) return;
 
     try {
-      const res = await fetch(`https://streamingtvshow-api.onrender.com/deletemovie/${id}`, {
+      const res = await fetch(api+`/deletemovie/${id}`, {
         method: "DELETE",
       });
       const json = await res.json();

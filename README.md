@@ -4,7 +4,9 @@ Frontend: React (https://streamingtvshow.onrender.com)
 Backend API: Node + PostgreSQL 
 Features: Add, edit, delete, search, and pagination.
 
-END POINT:
+END POINTS:
+
+
 1.https://streamingtvshow.onrender.com/getallmovies?page=2&limit=10
 
 2.https://streamingtvshow.onrender.com/searchmovies?q=push&page=1&limit=10
